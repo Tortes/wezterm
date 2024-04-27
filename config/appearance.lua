@@ -11,16 +11,18 @@ return {
 
    -- color scheme
    -- colors = colors,
-   color_scheme = "Gruvbox dark, medium (base16)",
+   -- color_scheme = "Gruvbox dark, medium (base16)",
+   -- color_scheme = "Everforest Lioght",
+   color_scheme = 'Everforest Dark (Gogh)',
 
    -- background
-   window_background_opacity = 0.95,
-   win32_system_backdrop = 'Acrylic',
-   window_background_gradient = {
-      colors = { '#121C1C', '#0B1F1F' },
-      -- Specifices a Linear gradient starting in the top left corner.
-      orientation = { Linear = { angle = -45.0 } },
-   },
+   -- window_background_opacity = 0.5,
+   -- win32_system_backdrop = 'Acrylic',
+   -- window_background_gradient = {
+   --    colors = { '#121C1C', '#0B1F1F' },
+   --    -- Specifices a Linear gradient starting in the top left corner.
+   --    orientation = { Linear = { angle = -45.0 } },
+   -- },
    -- background = {
    --    {
    --       source = { File = wezterm.config_dir .. '/backdrops/space.jpg' },
@@ -60,8 +62,8 @@ return {
    integrated_title_button_style = "Windows",
    integrated_title_button_color = "auto",
    integrated_title_button_alignment = "Right",
-   initial_cols = 120,
-   initial_rows = 24,
+   initial_cols = 160,
+   initial_rows = 40,
    window_padding = {
       left = 5,
       right = 10,
