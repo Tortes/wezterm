@@ -34,7 +34,7 @@ local colorscheme = {
    cursor_bg = mocha.rosewater,
    cursor_border = mocha.rosewater,
    cursor_fg = mocha.crust,
-   selection_bg = mocha.surface2,
+   selection_bg = 'rgba(50% 50% 50% 50%)', --mocha.surface2,
    selection_fg = mocha.text,
    ansi = {
       "#0C0C0C", -- black

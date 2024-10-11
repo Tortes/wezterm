@@ -16,7 +16,7 @@ return {
    color_scheme = 'Everforest Dark (Gogh)',
 
    -- background
-   -- window_background_opacity = 0.5,
+   window_background_opacity = 0.85,
    -- win32_system_backdrop = 'Acrylic',
    -- window_background_gradient = {
    --    colors = { '#121C1C', '#0B1F1F' },

@@ -25,6 +25,8 @@ local keys = {
    -- copy/paste --
    { key = 'c', mods = 'CTRL|SHIFT', action = act.CopyTo('Clipboard') },
    { key = 'v', mods = 'CTRL|SHIFT', action = act.PasteFrom('Clipboard') },
+   { key = 'c', mods = 'SUPER', action = act.CopyTo('Clipboard') },
+   { key = 'v', mods = 'SUPER', action = act.PasteFrom('Clipboard') },
 
    -- tabs --
    -- tabs: spawn+close
@@ -35,6 +37,8 @@ local keys = {
    -- tabs: navigation
    { key = '[', mods = mod.SUPER, action = act.ActivateTabRelative(-1) },
    { key = ']', mods = mod.SUPER, action = act.ActivateTabRelative(1) },
+   { key = 'LeftArrow', mods = mod.SUPER, action = act.ActivateTabRelative(-1) },
+   { key = 'RightArrow', mods = mod.SUPER, action = act.ActivateTabRelative(1) },
    { key = '[', mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },
    { key = ']', mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },
 
