@@ -79,6 +79,10 @@ local keys = {
    { key = 'DownArrow', mods = mod.SUPER_REV, action = act.AdjustPaneSize({ 'Down', 1 }) },
    { key = 'LeftArrow', mods = mod.SUPER_REV, action = act.AdjustPaneSize({ 'Left', 1 }) },
    { key = 'RightArrow', mods = mod.SUPER_REV, action = act.AdjustPaneSize({ 'Right', 1 }) },
+    -- Make Option-Left equivalent to Alt-b which many line editors interpret as backward-word
+   { key="LeftArrow", mods="OPT", action=wezterm.action{SendString="\x1bb"} },
+    -- Make Option-Right equivalent to Alt-f; forward-word
+   { key="RightArrow", mods="OPT", action=wezterm.action{SendString="\x1bf"} },
 
    -- fonts --
    -- fonts: resize
