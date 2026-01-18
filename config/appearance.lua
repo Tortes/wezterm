@@ -13,7 +13,8 @@ return {
    -- colors = colors,
    -- color_scheme = "Gruvbox dark, medium (base16)",
    -- color_scheme = "Everforest Lioght",
-   color_scheme = 'Everforest Dark (Gogh)',
+   -- color_scheme = 'Everforest Dark (Gogh)',
+   color_scheme = 's3r0 modified (terminal.sexy)',
 
    -- background
    window_background_opacity = 0.85,
@@ -62,10 +63,10 @@ return {
    integrated_title_button_style = "Windows",
    integrated_title_button_color = "auto",
    integrated_title_button_alignment = "Right",
-   initial_cols = 160,
+   initial_cols = 150,
    initial_rows = 40,
    window_padding = {
-      left = 5,
+      left = 10,
       right = 10,
       top = 12,
       bottom = 7,

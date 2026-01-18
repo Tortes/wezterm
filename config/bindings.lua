@@ -7,9 +7,11 @@ local mod = {}
 if platform.is_mac then
    mod.SUPER = 'SUPER'
    mod.SUPER_REV = 'SUPER|CTRL'
+   mod.SUPER_ALT = 'SUPER|SHIFT'
 elseif platform.is_win then
    mod.SUPER = 'ALT' -- to not conflict with Windows key shortcuts
    mod.SUPER_REV = 'ALT|CTRL'
+   mod.SUPER_ALT = 'SHIFT|CTRL'
 end
 
 local keys = {
