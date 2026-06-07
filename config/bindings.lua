@@ -44,6 +44,11 @@ local keys = {
    { key = '[', mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },
    { key = ']', mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },
 
+   { key = 'LeftArrow',  mods = mod.SUPER, action = act.ActivatePaneDirection('Left') },
+   { key = 'RightArrow', mods = mod.SUPER, action = act.ActivatePaneDirection('Right') },
+   { key = 'UpArrow',    mods = mod.SUPER, action = act.ActivatePaneDirection('Up') },
+   { key = 'DownArrow',  mods = mod.SUPER, action = act.ActivatePaneDirection('Down') },
+
    -- window --
    -- spawn windows
    { key = 'n', mods = mod.SUPER, action = act.SpawnWindow },
@@ -51,17 +56,17 @@ local keys = {
    -- panes --
    -- panes: split panes
    {
-      key = [[/]],
-      mods = mod.SUPER_REV,
-      action = act.SplitVertical({ domain = 'CurrentPaneDomain' }),
-   },
-   {
-      key = [[\]],
-      mods = mod.SUPER_REV,
+      key = '0',
+      mods = mod.SUPER,
       action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }),
    },
    {
-      key = [[-]],
+      key = '-',
+      mods = mod.SUPER,
+      action = act.SplitVertical({ domain = 'CurrentPaneDomain' }),
+   },
+   {
+      key = '-',
       mods = mod.SUPER_REV,
       action = act.CloseCurrentPane({ confirm = true }),
    },
@@ -81,10 +86,10 @@ local keys = {
    { key = 'DownArrow', mods = mod.SUPER_REV, action = act.AdjustPaneSize({ 'Down', 1 }) },
    { key = 'LeftArrow', mods = mod.SUPER_REV, action = act.AdjustPaneSize({ 'Left', 1 }) },
    { key = 'RightArrow', mods = mod.SUPER_REV, action = act.AdjustPaneSize({ 'Right', 1 }) },
-    -- Make Option-Left equivalent to Alt-b which many line editors interpret as backward-word
-   { key="LeftArrow", mods="OPT", action=wezterm.action{SendString="\x1bb"} },
-    -- Make Option-Right equivalent to Alt-f; forward-word
-   { key="RightArrow", mods="OPT", action=wezterm.action{SendString="\x1bf"} },
+   -- Make Option-Left equivalent to Alt-b which many line editors interpret as backward-word
+   { key = 'LeftArrow', mods = 'OPT', action = wezterm.action({ SendString = '\x1bb' }) },
+   -- Make Option-Right equivalent to Alt-f; forward-word
+   { key = 'RightArrow', mods = 'OPT', action = wezterm.action({ SendString = '\x1bf' }) },
 
    -- fonts --
    -- fonts: resize
@@ -117,7 +122,7 @@ local keys = {
    {
       key = 'R',
       mods = 'CTRL|SHIFT',
-      action = act.PromptInputLine ({
+      action = act.PromptInputLine({
          description = 'Enter new name for tab',
          action = wezterm.action_callback(function(window, pane, line)
             -- line will be `nil` if they hit escape without entering anything
@@ -160,39 +165,39 @@ local mouse_bindings = {
    {
       event = { Down = { streak = 1, button = 'Left' } },
       mods = 'NONE',
-      action = act.SelectTextAtMouseCursor 'Cell',
+      action = act.SelectTextAtMouseCursor('Cell'),
    },
    {
       event = { Up = { streak = 1, button = 'Left' } },
       mods = 'NONE',
-      action = act.ExtendSelectionToMouseCursor 'Cell',
+      action = act.ExtendSelectionToMouseCursor('Cell'),
    },
    {
       event = { Drag = { streak = 1, button = 'Left' } },
       mods = 'NONE',
-      action = act.ExtendSelectionToMouseCursor 'Cell',
+      action = act.ExtendSelectionToMouseCursor('Cell'),
    },
    -- Triple Left click will select a line
    {
       event = { Down = { streak = 3, button = 'Left' } },
       mods = 'NONE',
-      action = act.SelectTextAtMouseCursor 'Line',
+      action = act.SelectTextAtMouseCursor('Line'),
    },
    {
       event = { Up = { streak = 3, button = 'Left' } },
       mods = 'NONE',
-      action = act.SelectTextAtMouseCursor 'Line',
+      action = act.SelectTextAtMouseCursor('Line'),
    },
    -- Double Left click will select a word
    {
       event = { Down = { streak = 2, button = 'Left' } },
       mods = 'NONE',
-      action = act.SelectTextAtMouseCursor 'Word',
+      action = act.SelectTextAtMouseCursor('Word'),
    },
    {
       event = { Up = { streak = 2, button = 'Left' } },
       mods = 'NONE',
-      action = act.SelectTextAtMouseCursor 'Word',
+      action = act.SelectTextAtMouseCursor('Word'),
    },
    -- Turn on the mouse wheel to scroll the screen
    {
