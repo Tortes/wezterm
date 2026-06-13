@@ -39,15 +39,8 @@ local keys = {
    -- tabs: navigation
    { key = '[', mods = mod.SUPER, action = act.ActivateTabRelative(-1) },
    { key = ']', mods = mod.SUPER, action = act.ActivateTabRelative(1) },
-   { key = 'LeftArrow', mods = mod.SUPER, action = act.ActivateTabRelative(-1) },
-   { key = 'RightArrow', mods = mod.SUPER, action = act.ActivateTabRelative(1) },
    { key = '[', mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },
    { key = ']', mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },
-
-   { key = 'LeftArrow',  mods = mod.SUPER, action = act.ActivatePaneDirection('Left') },
-   { key = 'RightArrow', mods = mod.SUPER, action = act.ActivatePaneDirection('Right') },
-   { key = 'UpArrow',    mods = mod.SUPER, action = act.ActivatePaneDirection('Up') },
-   { key = 'DownArrow',  mods = mod.SUPER, action = act.ActivatePaneDirection('Down') },
 
    -- window --
    -- spawn windows
@@ -76,10 +69,14 @@ local keys = {
    { key = 'w', mods = mod.SUPER, action = act.CloseCurrentPane({ confirm = false }) },
 
    -- panes: navigation
-   { key = 'k', mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Up') },
-   { key = 'j', mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Down') },
-   { key = 'h', mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Left') },
-   { key = 'l', mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Right') },
+   { key = 'LeftArrow',  mods = 'ALT', action = act.ActivatePaneDirection('Left') },
+   { key = 'RightArrow', mods = 'ALT', action = act.ActivatePaneDirection('Right') },
+   { key = 'UpArrow',    mods = 'ALT', action = act.ActivatePaneDirection('Up') },
+   { key = 'DownArrow',  mods = 'ALT', action = act.ActivatePaneDirection('Down') },
+   { key = 'h', mods = 'ALT', action = act.ActivatePaneDirection('Left') },
+   { key = 'j', mods = 'ALT', action = act.ActivatePaneDirection('Down') },
+   { key = 'k', mods = 'ALT', action = act.ActivatePaneDirection('Up') },
+   { key = 'l', mods = 'ALT', action = act.ActivatePaneDirection('Right') },
 
    -- panes: resize
    { key = 'UpArrow', mods = mod.SUPER_REV, action = act.AdjustPaneSize({ 'Up', 1 }) },
@@ -93,8 +90,6 @@ local keys = {
 
    -- fonts --
    -- fonts: resize
-   { key = 'UpArrow', mods = mod.SUPER, action = act.IncreaseFontSize },
-   { key = 'DownArrow', mods = mod.SUPER, action = act.DecreaseFontSize },
    { key = 'r', mods = mod.SUPER, action = act.ResetFontSize },
 
    -- key-tables --

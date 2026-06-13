@@ -1,6 +1,6 @@
 local wezterm = require('wezterm')
 local colors = require('colors.custom')
--- local fonts = require('config.fonts')
+local fonts = require('config.fonts')
 
 return {
    term = "xterm-256color",
@@ -18,12 +18,12 @@ return {
 
    -- background
    window_background_opacity = 0.85,
-   -- win32_system_backdrop = 'Acrylic',
-   -- window_background_gradient = {
-   --    colors = { '#121C1C', '#0B1F1F' },
-   --    -- Specifices a Linear gradient starting in the top left corner.
-   --    orientation = { Linear = { angle = -45.0 } },
-   -- },
+   win32_system_backdrop = 'Acrylic',
+   window_background_gradient = {
+      colors = { '#121C1C', '#0B1F1F' },
+      -- Specifices a Linear gradient starting in the top left corner.
+      orientation = { Linear = { angle = -45.0 } },
+   },
    -- background = {
    --    {
    --       source = { File = wezterm.config_dir .. '/backdrops/space.jpg' },
