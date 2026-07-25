@@ -6,9 +6,10 @@ local GLYPH_ADMIN = '󰞀' -- nf.md_shield_half_full
 local M = {}
 local __cells__ = {}
 local colors = {
-   default = { bg = '#45475a', fg = '#1c1b19', },
-   is_active = { bg = '#7FB4CA', fg = '#11111b', },
-   hover = { bg = '#587d8c', fg = '#1c1b19', },
+   default = { bg = '#343f44', fg = '#859289', },
+   is_active = { bg = '#a7c080', fg = '#2d353b', },
+   hover = { bg = '#4f585e', fg = '#d3c6aa', },
+   unseen = '#dbbc7f',
 }
 
 local _set_process_name = function(s)
@@ -88,7 +89,7 @@ M.setup = function()
       _push(bg, fg, { Intensity = 'Bold' }, ' ' .. title)
 
       if has_unseen_output then
-         _push(bg, '#FFA066', { Intensity = 'Bold' }, ' ' .. GLYPH_CIRCLE)
+         _push(bg, colors.unseen, { Intensity = 'Bold' }, ' ' .. GLYPH_CIRCLE)
       end
 
       _push(bg, fg, { Intensity = 'Bold' }, ' ')
