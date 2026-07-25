@@ -3,14 +3,15 @@ local wezterm = require('wezterm')
 local GLYPH_CIRCLE = '' -- nf.fa_circle
 local GLYPH_ADMIN = '󰞀' -- nf.md_shield_half_full
 local TAB_WIDTH = 28
+local TAB_GAP = 1
 local TAB_BAR_BG = '#232a2e'
 
 local M = {}
 local __cells__ = {}
 local colors = {
-   default = { bg = '#343f44', fg = '#859289', border = '#56635f', },
-   is_active = { bg = '#a7c080', fg = '#2d353b', border = '#dbbc7f', },
-   hover = { bg = '#4f585e', fg = '#d3c6aa', border = '#83c092', },
+   default = { bg = '#343f44', fg = '#859289', intensity = 'Normal', },
+   is_active = { bg = '#a7c080', fg = '#2d353b', intensity = 'Bold', },
+   hover = { bg = '#4f585e', fg = '#d3c6aa', intensity = 'Bold', },
    unseen = '#dbbc7f',
 }
 
@@ -80,7 +81,7 @@ M.setup = function()
       __cells__ = {}
 
       local tab_width = math.min(TAB_WIDTH, max_width)
-      if tab_width < 3 then
+      if tab_width < 2 then
          return wezterm.truncate_right(tostring(tab.tab_index + 1), max_width)
       end
 
@@ -96,7 +97,8 @@ M.setup = function()
       local title = _set_title(tab)
       local is_admin = _check_if_admin(tab.active_pane.title)
       local has_unseen_output = _has_unseen_output(tab)
-      local content_width = tab_width - 2
+      local gap_width = math.min(TAB_GAP, tab_width - 1)
+      local content_width = tab_width - gap_width
       local content = _format_content(
          tab,
          title,
@@ -105,11 +107,11 @@ M.setup = function()
          content_width
       )
 
-      -- A colored left status rail and a right divider make each fixed-width
-      -- tab visually distinct without consuming space with rounded caps.
-      _push(TAB_BAR_BG, style.border, { Intensity = 'Bold' }, tab.is_active and '▌' or '▏')
-      _push(style.bg, style.fg, { Intensity = 'Bold' }, content)
-      _push(TAB_BAR_BG, style.border, { Intensity = 'Bold' }, '│')
+      -- Keep every tab the same width, but separate adjacent color blocks with
+      -- a one-cell gutter that uses the title-bar background. This is clearer
+      -- than relying on similar inactive colors and quieter than border glyphs.
+      _push(style.bg, style.fg, { Intensity = style.intensity }, content)
+      _push(TAB_BAR_BG, TAB_BAR_BG, { Intensity = 'Normal' }, string.rep(' ', gap_width))
 
       return __cells__
    end)
