@@ -14,6 +14,44 @@ local colors = {
    hover = { bg = '#4f585e', fg = '#d3c6aa', intensity = 'Bold', },
 }
 
+local wrappers = {
+   command = true,
+   doas = true,
+   env = true,
+   nohup = true,
+   sudo = true,
+   time = true,
+}
+
+local function trim(value)
+   return tostring(value or ''):gsub('^%s+', ''):gsub('%s+$', '')
+end
+
+local function basename(path)
+   return trim(path):gsub('(.*[/\\])(.*)', '%2')
+end
+
+local function command_name(command_line)
+   local skip_options = false
+
+   for token in trim(command_line):gmatch('%S+') do
+      token = token:gsub('^["\'`]+', ''):gsub('["\'`;|&]+$', '')
+      local name = basename(token):gsub('%.exe$', '')
+
+      if name:match('^[%w_]+=.+') then
+         -- Skip environment assignments such as FOO=bar.
+      elseif wrappers[name] then
+         skip_options = true
+      elseif skip_options and name:sub(1, 1) == '-' then
+         -- Skip wrapper flags such as sudo -E.
+      elseif name ~= '' then
+         return name
+      end
+   end
+
+   return nil
+end
+
 local function has_unseen_output(tab)
    for _, pane in ipairs(tab.panes or {}) do
       if pane.has_unseen_output then
@@ -29,16 +67,7 @@ local function cwd_basename(pane)
    end
 
    local cwd = pane.current_working_dir
-   local path
-
-   -- Since WezTerm 20240127 current_working_dir is a Url object. Older
-   -- releases expose it as a URI string, so support both representations.
-   if type(cwd) == 'string' then
-      path = cwd
-   else
-      path = cwd.file_path
-   end
-
+   local path = type(cwd) == 'string' and cwd or cwd.file_path
    if not path or path == '' then
       return nil
    end
@@ -49,11 +78,7 @@ local function cwd_basename(pane)
       :gsub('[/\\]+$', '')
 
    local name = path:match('([^/\\]+)$')
-   if not name or name == '' then
-      return nil
-   end
-
-   return name
+   return name and name ~= '' and name or nil
 end
 
 local function tab_title(tab)
@@ -62,9 +87,18 @@ local function tab_title(tab)
       return tab.tab_title
    end
 
-   -- Do not use active_pane.title or foreground_process_name here. On
-   -- Windows/WSL those values can resolve to wslhost/wslhost.exe.
-   return cwd_basename(tab.active_pane) or FALLBACK_TITLE
+   local pane = tab.active_pane or {}
+   local user_vars = pane.user_vars or {}
+
+   -- The Windows host can only see wslhost.exe. The WSL shell reports the
+   -- actual command via OSC 1337 UserVars instead.
+   local prog = command_name(user_vars.WEZTERM_TAB_PROG)
+      or command_name(user_vars.WEZTERM_PROG)
+   if prog then
+      return prog
+   end
+
+   return cwd_basename(pane) or FALLBACK_TITLE
 end
 
 local function fit_to_width(text, width)
