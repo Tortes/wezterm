@@ -46,8 +46,8 @@ return {
    -- tab bar
    enable_tab_bar = true,
    hide_tab_bar_if_only_one_tab = true,
-   use_fancy_tab_bar = true,
-   tab_max_width = 25,
+   use_fancy_tab_bar = false,
+   tab_max_width = 32,
    show_tab_index_in_tab_bar = true,
    switch_to_last_active_tab_when_closing_tab = true,
 
@@ -75,8 +75,8 @@ return {
    window_frame = {
       active_titlebar_bg = '#0F2536',
       inactive_titlebar_bg = '#0F2536',
-      -- font = fonts.font,
-      -- font_size = fonts.font_size,
+      font = fonts.font,
+      font_size = 14,
    },
    inactive_pane_hsb = { saturation = 0.9, brightness = 0.7 },
 }
