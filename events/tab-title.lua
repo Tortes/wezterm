@@ -5,13 +5,13 @@ local GLYPH_ADMIN = '󰞀' -- nf.md_shield_half_full
 local TAB_WIDTH = 28
 local TAB_GAP = 1
 local TAB_BAR_BG = '#232a2e'
+local FALLBACK_TITLE = 'WSL'
 
 local HIDDEN_PROCESS_NAMES = {
    wslhost = true,
 }
 
 local M = {}
-local __cells__ = {}
 local colors = {
    default = { bg = '#343f44', fg = '#859289', intensity = 'Normal', },
    is_active = { bg = '#a7c080', fg = '#2d353b', intensity = 'Bold', },
@@ -19,39 +19,69 @@ local colors = {
    unseen = '#dbbc7f',
 }
 
-local _set_process_name = function(s)
-   local a = string.gsub(s, '(.*[/\\])(.*)', '%2')
-   local process_name = a:gsub('%.exe$', '')
+local _safe_string = function(value)
+   if value == nil then
+      return ''
+   end
+   return tostring(value)
+end
 
+local _basename = function(path)
+   return _safe_string(path):gsub('(.*[/\\])(.*)', '%2')
+end
+
+local _clean_process_name = function(path)
+   local process_name = _basename(path):gsub('%.exe$', '')
    if HIDDEN_PROCESS_NAMES[process_name:lower()] then
       return ''
    end
-
    return process_name
 end
 
-local _set_title = function(tab)
-   if tab.tab_title and #tab.tab_title > 0 then
-      return tab.tab_title
-   end
+local _clean_title = function(title)
+   local cleaned = _safe_string(title)
 
-   local process_name = _set_process_name(tab.active_pane.foreground_process_name)
-   if process_name:len() > 0 then
-      return process_name .. ' ~ ' .. tab.active_pane.title
-   end
+   -- WezTerm may derive a pane title from the Windows-side WSL host process.
+   -- Remove it whether it appears alone or as a prefix such as
+   -- "wslhost.exe ~ ..." or "wslhost: ...".
+   cleaned = cleaned:gsub('^[Ww][Ss][Ll][Hh][Oo][Ss][Tt]%.?[Ee]?[Xx]?[Ee]?%s*[~:%-]?%s*', '')
+   cleaned = cleaned:gsub('^%s+', ''):gsub('%s+$', '')
 
-   return tab.active_pane.title
+   return cleaned
 end
 
-local _check_if_admin = function(p)
-   if p:match('^Administrator: ') then
-      return true
+local _set_title = function(tab)
+   local explicit_title = _clean_title(tab.tab_title)
+   if explicit_title:len() > 0 then
+      return explicit_title
    end
-   return false
+
+   local pane_title = _clean_title(tab.active_pane and tab.active_pane.title)
+   local process_name = _clean_process_name(
+      tab.active_pane and tab.active_pane.foreground_process_name
+   )
+
+   if process_name:len() > 0 and pane_title:len() > 0 then
+      return process_name .. ' ~ ' .. pane_title
+   end
+
+   if pane_title:len() > 0 then
+      return pane_title
+   end
+
+   if process_name:len() > 0 then
+      return process_name
+   end
+
+   return FALLBACK_TITLE
+end
+
+local _check_if_admin = function(title)
+   return _safe_string(title):match('^Administrator: ') ~= nil
 end
 
 local _has_unseen_output = function(tab)
-   for _, pane in ipairs(tab.panes) do
+   for _, pane in ipairs(tab.panes or {}) do
       if pane.has_unseen_output then
          return true
       end
@@ -59,19 +89,15 @@ local _has_unseen_output = function(tab)
    return false
 end
 
----@param fg string
----@param bg string
----@param attribute table
----@param text string
-local _push = function(bg, fg, attribute, text)
-   table.insert(__cells__, { Background = { Color = bg } })
-   table.insert(__cells__, { Foreground = { Color = fg } })
-   table.insert(__cells__, { Attribute = attribute })
-   table.insert(__cells__, { Text = text })
+local _push = function(cells, bg, fg, intensity, text)
+   table.insert(cells, { Background = { Color = bg } })
+   table.insert(cells, { Foreground = { Color = fg } })
+   table.insert(cells, { Attribute = { Intensity = intensity } })
+   table.insert(cells, { Text = text })
 end
 
 local _format_content = function(tab, title, is_admin, has_unseen_output, width)
-   local prefix = string.format(' %d ', tab.tab_index + 1)
+   local prefix = string.format(' %d ', (tab.tab_index or 0) + 1)
    if is_admin then
       prefix = prefix .. GLYPH_ADMIN .. ' '
    end
@@ -86,44 +112,70 @@ local _format_content = function(tab, title, is_admin, has_unseen_output, width)
    return wezterm.pad_right(wezterm.truncate_right(content, width), width)
 end
 
+local _render_tab = function(tab, hover, max_width)
+   local cells = {}
+   local tab_width = math.min(TAB_WIDTH, max_width)
+
+   if tab_width < 2 then
+      return wezterm.truncate_right(tostring((tab.tab_index or 0) + 1), max_width)
+   end
+
+   local style
+   if tab.is_active then
+      style = colors.is_active
+   elseif hover then
+      style = colors.hover
+   else
+      style = colors.default
+   end
+
+   local title = _set_title(tab)
+   local is_admin = _check_if_admin(tab.active_pane and tab.active_pane.title)
+   local has_unseen_output = _has_unseen_output(tab)
+   local gap_width = math.min(TAB_GAP, tab_width - 1)
+   local content_width = tab_width - gap_width
+   local content = _format_content(
+      tab,
+      title,
+      is_admin,
+      has_unseen_output,
+      content_width
+   )
+
+   _push(cells, style.bg, style.fg, style.intensity, content)
+   _push(cells, TAB_BAR_BG, TAB_BAR_BG, 'Normal', string.rep(' ', gap_width))
+
+   return cells
+end
+
 M.setup = function()
    wezterm.on('format-tab-title', function(tab, _tabs, _panes, _config, hover, max_width)
-      __cells__ = {}
+      local ok, result = pcall(_render_tab, tab, hover, max_width)
+      if ok then
+         return result
+      end
+
+      -- Keep the custom geometry even if unexpected pane metadata causes a
+      -- rendering error, rather than allowing WezTerm to fall back to its
+      -- variable-width default tab title.
+      wezterm.log_error('format-tab-title failed: ' .. _safe_string(result))
 
       local tab_width = math.min(TAB_WIDTH, max_width)
-      if tab_width < 2 then
-         return wezterm.truncate_right(tostring(tab.tab_index + 1), max_width)
-      end
-
-      local style
-      if tab.is_active then
-         style = colors.is_active
-      elseif hover then
-         style = colors.hover
-      else
-         style = colors.default
-      end
-
-      local title = _set_title(tab)
-      local is_admin = _check_if_admin(tab.active_pane.title)
-      local has_unseen_output = _has_unseen_output(tab)
-      local gap_width = math.min(TAB_GAP, tab_width - 1)
-      local content_width = tab_width - gap_width
-      local content = _format_content(
-         tab,
-         title,
-         is_admin,
-         has_unseen_output,
+      local gap_width = math.min(TAB_GAP, math.max(0, tab_width - 1))
+      local content_width = math.max(1, tab_width - gap_width)
+      local fallback = wezterm.pad_right(
+         wezterm.truncate_right(
+            string.format(' %d %s', (tab.tab_index or 0) + 1, FALLBACK_TITLE),
+            content_width
+         ),
          content_width
       )
-
-      -- Keep every tab the same width, but separate adjacent color blocks with
-      -- a one-cell gutter that uses the title-bar background. This is clearer
-      -- than relying on similar inactive colors and quieter than border glyphs.
-      _push(style.bg, style.fg, { Intensity = style.intensity }, content)
-      _push(TAB_BAR_BG, TAB_BAR_BG, { Intensity = 'Normal' }, string.rep(' ', gap_width))
-
-      return __cells__
+      local cells = {}
+      _push(cells, colors.default.bg, colors.default.fg, 'Normal', fallback)
+      if gap_width > 0 then
+         _push(cells, TAB_BAR_BG, TAB_BAR_BG, 'Normal', string.rep(' ', gap_width))
+      end
+      return cells
    end)
 end
 
