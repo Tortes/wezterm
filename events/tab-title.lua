@@ -6,6 +6,10 @@ local TAB_WIDTH = 28
 local TAB_GAP = 1
 local TAB_BAR_BG = '#232a2e'
 
+local HIDDEN_PROCESS_NAMES = {
+   wslhost = true,
+}
+
 local M = {}
 local __cells__ = {}
 local colors = {
@@ -17,7 +21,13 @@ local colors = {
 
 local _set_process_name = function(s)
    local a = string.gsub(s, '(.*[/\\])(.*)', '%2')
-   return a:gsub('%.exe$', '')
+   local process_name = a:gsub('%.exe$', '')
+
+   if HIDDEN_PROCESS_NAMES[process_name:lower()] then
+      return ''
+   end
+
+   return process_name
 end
 
 local _set_title = function(tab)
