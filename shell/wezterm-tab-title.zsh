@@ -1,6 +1,10 @@
 # Report the current WSL command to WezTerm using an OSC 1337 UserVar.
 # Source this file from ~/.zshrc:
 #   source /path/to/wezterm/shell/wezterm-tab-title.zsh
+#
+# For recent Codex versions, Codex itself writes an OSC terminal title with an
+# activity spinner and an Action Required state. The WezTerm tab formatter uses
+# that title only after this hook identifies the active program as `codex`.
 
 if [[ -o interactive ]] && [[ -n "$WEZTERM_PANE" || "$TERM_PROGRAM" == "WezTerm" ]]; then
    autoload -Uz add-zsh-hook
