@@ -23,12 +23,28 @@ local wrappers = {
    time = true,
 }
 
+local shells = {
+   bash = true,
+   fish = true,
+   sh = true,
+   zsh = true,
+}
+
+local codex_spinner_frames = {
+   '⠋', '⠙', '⠹', '⠸', '⠼',
+   '⠴', '⠦', '⠧', '⠇', '⠏',
+}
+
 local function trim(value)
    return tostring(value or ''):gsub('^%s+', ''):gsub('%s+$', '')
 end
 
 local function basename(path)
    return trim(path):gsub('(.*[/\\])(.*)', '%2')
+end
+
+local function starts_with(value, prefix)
+   return value:sub(1, #prefix) == prefix
 end
 
 local function command_name(command_line)
@@ -50,6 +66,48 @@ local function command_name(command_line)
    end
 
    return nil
+end
+
+local function active_program(pane)
+   local user_vars = pane and pane.user_vars or {}
+   return command_name(user_vars.WEZTERM_TAB_PROG)
+      or command_name(user_vars.WEZTERM_PROG)
+end
+
+local function codex_activity_icon(pane)
+   local title = trim(pane and pane.title)
+
+   if title:find('Action Required', 1, true) then
+      return '!'
+   end
+
+   for _, frame in ipairs(codex_spinner_frames) do
+      if starts_with(title, frame) then
+         return frame
+      end
+   end
+
+   if title:find('Working', 1, true)
+      or title:find('Thinking', 1, true)
+      or title:find('Waiting', 1, true)
+      or title:find('Starting', 1, true)
+   then
+      return '●'
+   end
+
+   return '○'
+end
+
+local function activity_icon(pane, program)
+   if program == 'codex' then
+      return codex_activity_icon(pane)
+   end
+
+   if not program or shells[program] then
+      return '○'
+   end
+
+   return '▶'
 end
 
 local function has_unseen_output(tab)
@@ -81,24 +139,17 @@ local function cwd_basename(pane)
    return name and name ~= '' and name or nil
 end
 
-local function tab_title(tab)
+local function tab_title(tab, program)
    -- Preserve titles explicitly set by Ctrl+Shift+R or wezterm cli.
    if tab.tab_title and #tab.tab_title > 0 then
       return tab.tab_title
    end
 
-   local pane = tab.active_pane or {}
-   local user_vars = pane.user_vars or {}
-
-   -- The Windows host can only see wslhost.exe. The WSL shell reports the
-   -- actual command via OSC 1337 UserVars instead.
-   local prog = command_name(user_vars.WEZTERM_TAB_PROG)
-      or command_name(user_vars.WEZTERM_PROG)
-   if prog then
-      return prog
+   if program then
+      return program
    end
 
-   return cwd_basename(pane) or FALLBACK_TITLE
+   return cwd_basename(tab.active_pane) or FALLBACK_TITLE
 end
 
 local function fit_to_width(text, width)
@@ -134,9 +185,12 @@ M.setup = function()
          style = colors.default
       end
 
+      local pane = tab.active_pane or {}
+      local program = active_program(pane)
+      local icon = activity_icon(pane, program)
       local gap_width = math.min(TAB_GAP, tab_width - 1)
       local content_width = tab_width - gap_width
-      local prefix = string.format(' %d ', tab.tab_index + 1)
+      local prefix = string.format(' %d %s ', tab.tab_index + 1, icon)
       local suffix = has_unseen_output(tab) and (' ' .. GLYPH_CIRCLE) or ''
       local available_title_width = math.max(
          0,
@@ -144,7 +198,7 @@ M.setup = function()
       )
 
       local content = prefix
-         .. wezterm.truncate_right(tab_title(tab), available_title_width)
+         .. wezterm.truncate_right(tab_title(tab, program), available_title_width)
          .. suffix
       content = fit_to_width(content, content_width)
 
