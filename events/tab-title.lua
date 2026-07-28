@@ -1,10 +1,17 @@
 local wezterm = require('wezterm')
 
 local GLYPH_CIRCLE = '' -- nf.fa_circle
-local TAB_WIDTH = 28
+local MAX_TAB_WIDTH = 28
 local TAB_GAP = 1
 local TAB_BAR_BG = '#232a2e'
 local FALLBACK_TITLE = 'WSL'
+
+-- The right status is clipped from its left edge. Reserving enough room for
+-- the clock and battery keeps those useful right-most fields visible, while
+-- the drag reserve leaves a reliable blank title-bar region for the mouse.
+local RIGHT_STATUS_RESERVE = 24
+local DRAG_AREA_RESERVE = 10
+local NEW_TAB_BUTTON_RESERVE = 3
 
 local M = {}
 
@@ -169,11 +176,67 @@ local function push(cells, bg, fg, intensity, text)
    table.insert(cells, { Text = text })
 end
 
+local function active_window_columns(tabs)
+   local active_tab = tabs[1]
+   for _, candidate in ipairs(tabs) do
+      if candidate.is_active then
+         active_tab = candidate
+         break
+      end
+   end
+
+   if not active_tab then
+      return 80
+   end
+
+   local right_edge = 0
+   for _, pane in ipairs(active_tab.panes or {}) do
+      right_edge = math.max(
+         right_edge,
+         (pane.left or 0) + (pane.width or 0)
+      )
+   end
+
+   if right_edge > 0 then
+      return right_edge
+   end
+
+   return active_tab.active_pane and active_tab.active_pane.width or 80
+end
+
+local function adaptive_tab_width(tabs, max_width)
+   local tab_count = math.max(1, #tabs)
+   local reserved = RIGHT_STATUS_RESERVE
+      + DRAG_AREA_RESERVE
+      + NEW_TAB_BUTTON_RESERVE
+   local available = math.max(tab_count, active_window_columns(tabs) - reserved)
+   local per_tab = math.floor(available / tab_count)
+
+   return math.max(1, math.min(MAX_TAB_WIDTH, max_width, per_tab))
+end
+
+local function tab_prefix(index, icon, content_width)
+   local candidates = {
+      string.format(' %d %s ', index, icon),
+      string.format('%d%s ', index, icon),
+      string.format('%d ', index),
+      tostring(index),
+   }
+
+   for _, candidate in ipairs(candidates) do
+      if wezterm.column_width(candidate) <= content_width then
+         return candidate
+      end
+   end
+
+   return wezterm.truncate_right(tostring(index), content_width)
+end
+
 M.setup = function()
-   wezterm.on('format-tab-title', function(tab, _tabs, _panes, _config, hover, max_width)
-      local tab_width = math.min(TAB_WIDTH, max_width)
-      if tab_width < 2 then
-         return tostring(tab.tab_index + 1)
+   wezterm.on('format-tab-title', function(tab, tabs, _panes, _config, hover, max_width)
+      local tab_width = adaptive_tab_width(tabs, max_width)
+      if tab_width <= 1 then
+         return tostring((tab.tab_index + 1) % 10)
       end
 
       local style
@@ -190,11 +253,17 @@ M.setup = function()
       local icon = activity_icon(pane, program)
       local gap_width = math.min(TAB_GAP, tab_width - 1)
       local content_width = tab_width - gap_width
-      local prefix = string.format(' %d %s ', tab.tab_index + 1, icon)
-      local suffix = has_unseen_output(tab) and (' ' .. GLYPH_CIRCLE) or ''
+      local prefix = tab_prefix(tab.tab_index + 1, icon, content_width)
+      local prefix_width = wezterm.column_width(prefix)
+
+      local suffix = ''
+      if has_unseen_output(tab) and content_width - prefix_width >= 2 then
+         suffix = ' ' .. GLYPH_CIRCLE
+      end
+
       local available_title_width = math.max(
          0,
-         content_width - wezterm.column_width(prefix) - wezterm.column_width(suffix)
+         content_width - prefix_width - wezterm.column_width(suffix)
       )
 
       local content = prefix
