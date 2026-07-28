@@ -6,10 +6,9 @@ local TAB_GAP = 1
 local TAB_BAR_BG = '#232a2e'
 local FALLBACK_TITLE = 'WSL'
 
--- The right status is clipped from its left edge. Reserving enough room for
--- the clock and battery keeps those useful right-most fields visible, while
--- the drag reserve leaves a reliable blank title-bar region for the mouse.
-local RIGHT_STATUS_RESERVE = 24
+-- Reserve the complete workspace/clock/battery area plus a dedicated blank
+-- strip that remains draggable even when the tab bar is crowded.
+local RIGHT_STATUS_RESERVE = 40
 local DRAG_AREA_RESERVE = 10
 local NEW_TAB_BUTTON_RESERVE = 3
 
