@@ -4,8 +4,6 @@ local umath = require('utils.math')
 local nf = wezterm.nerdfonts
 local M = {}
 
-local SEPARATOR_CHAR = nf.oct_dash .. ' '
-
 local discharging_icons = {
    nf.md_battery_10,
    nf.md_battery_20,
@@ -32,62 +30,60 @@ local charging_icons = {
 }
 
 local colors = {
-   date_fg = '#fab387',
-   date_bg = '#0F2536',
-   battery_fg = '#f9e2af',
-   battery_bg = '#0F2536',
-   separator_fg = '#0F2536',
-   separator_bg = '#0F2536'
+   bg = '#232a2e',
+   workspace = '#83c092',
+   date = '#dbbc7f',
+   battery = '#a7c080',
+   battery_low = '#e69875',
+   battery_critical = '#e67e80',
+   muted = '#859289',
 }
 
-local __cells__ = {} -- wezterm FormatItems (ref: https://wezfurlong.org/wezterm/config/lua/wezterm/format.html)
+local __cells__ = {}
 
----@param text string
----@param icon string
----@param fg string
----@param bg string
----@param separate boolean
-local _push = function(text, icon, fg, bg, separate)
+local _push = function(text, icon, fg)
    table.insert(__cells__, { Foreground = { Color = fg } })
-   table.insert(__cells__, { Background = { Color = bg } })
+   table.insert(__cells__, { Background = { Color = colors.bg } })
    table.insert(__cells__, { Attribute = { Intensity = 'Bold' } })
-   table.insert(__cells__, { Text = icon .. ' ' .. text .. ' ' })
+   table.insert(__cells__, { Text = ' ' .. icon .. ' ' .. text .. ' ' })
+end
 
-   if separate then
-      table.insert(__cells__, { Foreground = { Color = colors.separator_fg } })
-      table.insert(__cells__, { Background = { Color = colors.separator_bg } })
-      table.insert(__cells__, { Text = SEPARATOR_CHAR })
-   end
+local _set_workspace = function(window)
+   _push(window:active_workspace(), nf.cod_window, colors.workspace)
 end
 
 local _set_date = function()
-   local date = wezterm.strftime(' %a %H:%M:%S')
-   _push(date, nf.fa_calendar, colors.date_fg, colors.date_bg, true)
+   local date = wezterm.strftime('%a %H:%M')
+   _push(date, nf.md_clock_outline, colors.date)
 end
 
 local _set_battery = function()
-   -- ref: https://wezfurlong.org/wezterm/config/lua/wezterm/battery_info.html
-
-   local charge = ''
-   local icon = ''
-
    for _, b in ipairs(wezterm.battery_info()) do
       local idx = umath.clamp(umath.round(b.state_of_charge * 10), 1, 10)
-      charge = string.format('%.0f%%', b.state_of_charge * 100)
+      local charge = string.format('%.0f%%', b.state_of_charge * 100)
+      local icon
+      local fg = colors.battery
 
       if b.state == 'Charging' then
          icon = charging_icons[idx]
       else
          icon = discharging_icons[idx]
       end
-   end
 
-   _push(charge, icon, colors.battery_fg, colors.battery_bg, false)
+      if b.state_of_charge <= 0.15 then
+         fg = colors.battery_critical
+      elseif b.state_of_charge <= 0.30 then
+         fg = colors.battery_low
+      end
+
+      _push(charge, icon, fg)
+   end
 end
 
 M.setup = function()
-   wezterm.on('update-right-status', function(window, _pane)
+   wezterm.on('update-status', function(window, _pane)
       __cells__ = {}
+      _set_workspace(window)
       _set_date()
       _set_battery()
 
@@ -96,4 +92,3 @@ M.setup = function()
 end
 
 return M
-
